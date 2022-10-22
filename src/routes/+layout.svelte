@@ -1,6 +1,31 @@
 <script lang="ts">
 	import NavHost from "$lib/components/molecules/Navigation.svelte";
 	import '../app.css';
+
+  import { navigating } from '$app/stores'
+  import { onMount } from "svelte";
+  import Spinner from '$lib/components/atoms/Spinner.svelte';
+
+  let timeout = 0;
+
+  let show_spinner = false;
+
+  onMount(() => {
+    // Show spinner if we are still waiting for navigation after 150ms
+    navigating.subscribe(nav => {
+      // cancel current timer, if any
+      clearTimeout(timeout);
+      // null after navigation finishes
+      if (nav != null) {
+        timeout = setTimeout(() => {
+          show_spinner = true;
+        }, 150);
+      } else {
+        // navigation finished
+        show_spinner = false;
+      }
+    });
+  });
 </script>
 
 <svelte:head>
@@ -17,4 +42,7 @@
 </svelte:head>
 
 <NavHost/>
+{#if show_spinner}
+  <Spinner />
+{/if}
 <slot />
