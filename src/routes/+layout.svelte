@@ -8,7 +8,7 @@
 
   let timeout = 0;
 
-  let show_spinner = false;
+  let is_navigating = false;
 
   onMount(() => {
     // Show spinner if we are still waiting for navigation after 150ms
@@ -18,11 +18,11 @@
       // null after navigation finishes
       if (nav != null) {
         timeout = setTimeout(() => {
-          show_spinner = true;
+          is_navigating = true;
         }, 150);
       } else {
         // navigation finished
-        show_spinner = false;
+        is_navigating = false;
       }
     });
   });
@@ -42,7 +42,8 @@
 </svelte:head>
 
 <NavHost/>
-{#if show_spinner}
+{#if is_navigating}
   <Spinner />
+{:else}
+  <slot />
 {/if}
-<slot />
