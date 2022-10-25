@@ -9,10 +9,10 @@
 <section id="doc-section-main" in:fly={{ y: 10, easing: quintOut, duration: 700 }}>
 	<div class="menu">
 		<div class="doc-section-selected">
-			<h3>Prerequisites</h3>
+			<a href="/docs"><h3>Prerequisites</h3></a>
 		</div>
 		<div class="doc-section">
-			<h3>Using ReVanced CLI and installiing ReVanced</h3>
+			<a href="/docs/a"><h3>Using ReVanced CLI and installiing ReVanced</h3></a>
 		</div>
 	</div>
   <div class="content">
