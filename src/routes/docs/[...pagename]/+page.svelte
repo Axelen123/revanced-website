@@ -1,7 +1,10 @@
 <script lang="ts">
   import type { PageData } from './$types';
 
+  // Data here comes from a trusted source.
+  // CSS comes from the layout.
   export let data: PageData;
   console.log(data);
 </script>
-<h1>{data.pagename}</h1>
+
+{@html data.content}
