@@ -1,16 +1,20 @@
 import type { RequestHandler } from './$types';
-
-import { acquire } from '$lib/documentation';
+import { error, json } from '@sveltejs/kit';
 
 import { parse } from 'marked';
-import { error } from '@sveltejs/kit';
+
+import { acquire } from '$lib/documentation';
 
 export const prerender = true;
 
 export const GET: RequestHandler = ( { params }) => {
-  const markdown = acquire(params.pagename);
+  const markdown = acquire(params.slug);
+
   if (markdown === null) {
     throw error(404);
   }
-  return new Response(parse(markdown));
+
+  return json({
+    content: parse(markdown)
+  });
 }
