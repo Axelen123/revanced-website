@@ -8,13 +8,14 @@ import { acquire } from '$lib/documentation';
 export const prerender = true;
 
 export const GET: RequestHandler = ( { params }) => {
-  const markdown = acquire(params.slug);
+  const document = acquire(params.slug);
 
-  if (markdown === null) {
+  if (document === null) {
     throw error(404);
   }
 
   return json({
-    content: parse(markdown)
+    title: document.title,
+    content: parse(document.content)
   });
 }

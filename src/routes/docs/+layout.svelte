@@ -14,7 +14,7 @@
 	<div class="menu">
     {#each data.index as page}
       <div class="doc-section">
-        <a href="/docs/{page}"><h3>Link to : /{page}</h3></a>
+        <a href="/docs/{page.slug}"><h3>{page.title}</h3></a>
       </div>
     {/each}
 	</div>

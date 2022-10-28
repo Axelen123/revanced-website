@@ -3,6 +3,17 @@ import { browser } from '$app/environment';
 import fs, { existsSync as exists } from 'fs';
 import path from 'path';
 
+export interface Document {
+  title: string;
+  content: string;
+  // fileformat: something;
+}
+
+export interface DocumentInfo {
+  title: string;
+  slug: string;
+}
+
 function not_browser() {
   if (browser) {
     throw Error('SvelteKit has skill issues');
@@ -13,7 +24,7 @@ function isDir(item: string): boolean {
   return fs.lstatSync(item).isDirectory();
 }
 
-export function acquire(pagename: string): string|null {
+export function acquire(pagename: string): Document|null {
   not_browser();
   let target = path.join("docs", pagename);
 
@@ -28,17 +39,23 @@ export function acquire(pagename: string): string|null {
     return null;
   }
 
-  return fs.readFileSync(target, 'utf-8');
+  const data = fs.readFileSync(target, 'utf-8');
+  let lines = data.split('\n');
+  // Title is the first line. Read and remove it.
+  const title = lines.splice(0, 1)[0];
+  const content = lines.join('\n');
+
+  return { title, content };
 }
 
 // Returns a list of all valid doc page slugs.
-export function index_content(): string[] {
+export function index_content(): DocumentInfo[] {
   not_browser();
 
   let files = [];
   let dirs = ["docs"];
 
-  // Recursively index all directories.
+  // Recursively index `docs` directory.
   while (dirs.length != 0) {
     const dir = dirs.pop();
 
@@ -55,16 +72,21 @@ export function index_content(): string[] {
   }
 
   return files
-    // Remove `docs/` prefix
-    .map(fname => fname.substring("docs/".length))
-    // Remove `.md` suffix
-    .map(name => name.substring(0, name.length - 3))
-    // For `index.md` to work correctly.
-    .map(name => {
-      const parts = name.split("/");
+    .map(fname => {
+      // Remove `docs/` prefix
+      let slug = fname
+        .substring("docs/".length);
+      // Remove `.md` suffix
+      slug = slug.substring(0, slug.length - 3);
+      // Remove `index` suffix if present.
+      const parts = slug.split("/");
       if (parts[parts.length - 1] == "index") {
         parts.pop();
       }
-      return parts.join("/");
+      slug = parts.join("/");
+
+      const title = acquire(slug).title;
+
+      return { slug, title };
     });
 }
