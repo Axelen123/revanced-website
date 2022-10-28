@@ -1,9 +1,11 @@
-import type { DocumentInfo } from '$lib/documentation';
+import type { DocumentationTree } from '$lib/documentation';
 import type { PageLoad } from './$types';
 
-export const load: PageLoad = async ({ fetch }) => {
-  const response = await fetch("/docs/_content/index.json");
-  const index: DocumentInfo[] = await response.json();
+type ExtendedDocumentInfo = DocumentInfo & { nesting_level: number };
 
-  return { index };
+export const load: PageLoad = async ({ fetch }) => {
+  const response = await fetch("/docs/_content/tree.json");
+  const tree: DocumentationTree = await response.json();
+
+  return { tree };
 }

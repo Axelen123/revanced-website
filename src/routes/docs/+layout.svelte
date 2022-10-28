@@ -1,9 +1,11 @@
 <script lang="ts">
+  // TODO: move everything except content highlighting here...
   import '$lib/documentation.scss';
 
   import type { PageData } from './$types';
 
-  import Button from '$lib/components/atoms/Button.svelte';
+  import DocsNavTree from '$lib/components/molecules/DocsNavTree.svelte';
+
   import { fly } from 'svelte/transition';
   import { quintOut } from 'svelte/easing';
 
@@ -12,11 +14,7 @@
 
 <section id="doc-section-main" in:fly={{ y: 10, easing: quintOut, duration: 700 }}>
 	<div class="menu">
-    {#each data.index as page}
-      <div class="doc-section">
-        <a href="/docs/{page.slug}"><h3>{page.title}</h3></a>
-      </div>
-    {/each}
+    <DocsNavTree tree={data.tree} />
 	</div>
   <div class="content">
     <slot></slot>

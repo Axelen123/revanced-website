@@ -4,5 +4,7 @@ import { slug_to_url } from '$lib/documentation.shared';
 export const prerender = true;
 
 export async function load({ fetch }) {
-    return { urls: index_content().map(slug_to_url) };
+    // Not actually sure if we are going to need this terribleness anyway.
+    // index_content().map(slug_to_url)
+    return { urls: ["/docs/_content/files/page.json"] };
 }
