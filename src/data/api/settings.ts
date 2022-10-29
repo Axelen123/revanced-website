@@ -14,7 +14,7 @@ export function api_base_url(): string {
 
 // (re)set base URL.
 export function set_api_base_url(url?: string) {
-  if (!!url) {
+  if (!url) {
     localStorage.removeItem(URL_KEY);
   } else {
     localStorage.setItem(URL_KEY, url);
