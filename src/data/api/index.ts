@@ -2,7 +2,10 @@ import type { Readable, Subscriber, Unsubscriber, Writable } from "svelte/store"
 import { writable } from "svelte/store";
 
 import { prerendering, browser } from "$app/environment";
-import { api_base_url } from "./settings";
+
+import * as settings from "./settings";
+import * as cache from "./cache";
+
 
 export class API<T> implements Readable<T> {
   private store: Writable<T>;
@@ -31,7 +34,7 @@ export class API<T> implements Readable<T> {
   }
 
   private url(): string {
-    let url = `${api_base_url()}/${this.endpoint}`;
+    let url = `${settings.api_base_url()}/${this.endpoint}`;
 
     if (prerendering) {
       url += '?cacheBypass=';
@@ -60,14 +63,21 @@ export class API<T> implements Readable<T> {
 
   // Request data, transform, cache and initialize if necessary.
   async request(fetch_fn = fetch): Promise<T> {
-    // TODO: check if there is anything in the cache first.
     if (browser) {
       this.requested_from_api = true;
     }
 
-    // Fetch and transform data
-    const response = await fetch_fn(this.url());
-    const data = this.transform(await response.json());
+    // Try to get data from the cache.
+    let data = cache.get(this.endpoint);
+
+    if (data === null) {
+      // Fetch and transform data
+      const response = await fetch_fn(this.url());
+      data = this.transform(await response.json());
+
+      // Update the cache.
+      cache.update(this.endpoint, data);
+    }
 
     // Initialize with the data. Applicable when page load function runs on client.
     this.init(data);
@@ -85,6 +95,7 @@ export class API<T> implements Readable<T> {
   // Implement Svelte store.
   subscribe(run: Subscriber<T>, invalidate?: any): Unsubscriber {
     if (!this.initialized()) {
+      // Make sure you call <api>.init() with data from the load() function of the page you are working on or a layout above it.
       throw Error(`API "${this.endpoint}" has not been initialized yet.`);
     }
     // Make sure we have up-to-date data from the API.
@@ -98,6 +109,7 @@ export class API<T> implements Readable<T> {
 
 // API Endpoints
 import type { Patch, Repository } from '../types';
+import { dev_log } from "$lib/utils";
 
 export type ContribData = { repositories: Repository[] };
 export type PatchesData = { patches: Patch[]; packages: string[] };
