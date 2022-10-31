@@ -18,8 +18,9 @@ export interface DocumentInfo {
   slug: string;
 }
 
-const supported_formats = new Map();
+const supported_formats: Map<string,  (c: string) => string> = new Map();
 supported_formats.set("md", parse_md);
+const supported_filetypes = [...supported_formats.keys()];
 
 export type DocsTreeNode = DocumentationTree|DocumentInfo;
 
@@ -69,7 +70,7 @@ function find_file_of_supported_format(prefix: string) {
     }
 
     // Return if file extension is supported.
-    if ([...supported_formats.keys()].includes(ext)) {
+    if (supported_filetypes.includes(ext)) {
       return {
         path: full_path,
         ext,
@@ -148,13 +149,14 @@ function process_folder(dir: string): DocumentationTree {
     let is_index_file = false;
 
     if (!is_dir) {
-      for (const format of supported_formats.keys()) {
+      for (const ext of supported_filetypes) {
         // Ignore files we cannot process.
-        if (item.endsWith(format)) {
-          can_process = true;
+        if (path.extname(item).substring(1) != ext) {
+          continue;
         }
 
-        if (item == `index.${format}`) {
+        can_process = true;
+        if (item == `index.${ext}`) {
           is_index_file = true;
         }
       }
