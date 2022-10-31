@@ -1,4 +1,5 @@
 import type { PageServerLoad } from './$types';
+import { error } from '@sveltejs/kit';
 
 import { acquire } from '$lib/documentation';
 import { parse } from 'marked';
@@ -9,6 +10,7 @@ export const prerender = true;
 export const load: PageServerLoad = ({ params }) => {
   const document = acquire(params.slug);
   if (document === null) {
+    error
     throw error(404);
   }
 

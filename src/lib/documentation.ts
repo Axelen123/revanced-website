@@ -147,7 +147,5 @@ function process_folder(dir: string): DocumentationTree {
 // Returns the document tree.
 export function index_content(): DocumentationTree {
   not_browser();
-  const tree = process_folder("docs");
-  console.log(tree);
-  return tree;
+  return process_folder("docs");
 }
