@@ -1,14 +1,16 @@
-import { browser } from '$app/environment';
+import { browser, prerendering } from '$app/environment';
 
 import fs, { existsSync as exists } from 'fs';
 import path from 'path';
 
 import { is_tree } from './documentation.shared';
 
+import { parse as parse_md } from 'marked';
+
 export interface Document {
   title: string;
+  // HTML
   content: string;
-  // fileformat: something;
 }
 
 export interface DocumentInfo {
@@ -16,7 +18,16 @@ export interface DocumentInfo {
   slug: string;
 }
 
+const supported_formats = new Map();
+supported_formats.set("md", parse_md);
+
 export type DocsTreeNode = DocumentationTree|DocumentInfo;
+
+let docs_folder = process.env.REVANCED_DOCS_FOLDER;
+if (docs_folder === undefined) {
+  if (prerendering) { console.warn("Using testing docs in production build") }
+  docs_folder = "testing-docs";
+}
 
 // A tree representing the `docs` folder.
 export interface DocsTree {
@@ -24,17 +35,10 @@ export interface DocsTree {
   index: DocumentInfo;
   // Everything except index.whatever
   nodes: DocsTreeNode[];
-  // docs: DocumentInfo[];
-  // // Folders below this one.
-  // subcategories: {
-  //   [key:string]: DocumentTree
-  // };
 }
 
-function not_browser() {
-  if (browser) {
-    throw Error('SvelteKit has skill issues');
-  }
+if (browser) {
+  throw Error('SvelteKit has skill issues');
 }
 
 function is_directory(item: string): boolean {
@@ -49,86 +53,124 @@ function get_slug_of_node(node: DocsTreeNode): string {
   return node.slug;
 }
 
-export function acquire(pagename: string): Document|null {
-  not_browser();
-  let target = path.join("docs", pagename);
+// Only used by get()
+function find_file_of_supported_format(prefix: string) {
+  const dir = path.dirname(prefix);
 
-  if (exists(target) && is_directory(target)) {
-    // Get the index.md of the folder.
-    target = path.join(target, "index.md");
-  } else {
-    target = `${target}.md`;
+  for (const item of fs.readdirSync(dir)) {
+    const full_path = path.join(dir, item);
+    // Get file extension
+    const ext = path.extname(item).substring(1);
+
+    // Ignore if it is not what we are looking for.
+    const desired_path = `${prefix}.${ext}`;
+    if (is_directory(full_path) || ext <= 1 || desired_path != full_path) {
+      continue;
+    }
+
+    // Return if file extension is supported.
+    if ([...supported_formats.keys()].includes(ext)) {
+      return {
+        path: full_path,
+        ext,
+      };
+    }
   }
 
-  if (!exists(target)) {
+  return null;
+}
+
+// Get a document. Returns null if it does not exist.
+export function get(slug: string): Document|null {
+  let target = path.join(docs_folder, slug);
+  if (exists(target) && is_directory(target)) {
+    target += "/index";
+  }
+  const file_info = find_file_of_supported_format(target);
+
+  if (file_info === null) {
     return null;
   }
 
-  const data = fs.readFileSync(target, 'utf-8');
+  const data = fs.readFileSync(file_info.path, 'utf-8');
   let lines = data.split('\n');
   // Title is the first line. Read and remove it.
   const title = lines.splice(0, 1)[0];
-  const content = lines.join('\n');
+  // Process it. We already know it is supported thanks to `find_file_of_supported_format`.
+  const content = supported_formats.get(file_info.ext)(
+    lines.join('\n')
+  );
 
   return { title, content };
 }
 
+// Get file information
 function process_file(fname: string): DocumentInfo {
-  // Remove `docs/` prefix
-  let slug = fname
-    .substring("docs/".length);
-  // Remove `.md` suffix
-  slug = slug.substring(0, slug.length - 3);
+  const prefix_len = `${docs_folder}/`.length;
+  // Remove docs folder prefix and file extension suffix, then split it.
+  const parts = fname
+    .substring(`${docs_folder}/`.length, fname.length - path.extname(fname).length)
+    .split("/");
+
   // Remove `index` suffix if present.
-  const parts = slug.split("/");
   const last_index = parts.length - 1;
   if (parts[last_index] == "index") {
     parts.pop();
-    // Make it end with / instead.
-    // parts[last_index] = "";
   }
-  slug = parts.join("/");
 
-  const title = acquire(slug).title;
+  const slug = parts.join("/");
+  const title = get(slug).title;
 
   return { slug, title };
 }
+
+const ignored_items = ["assets", "README.md"];
 
 // Returns a document tree.
 function process_folder(dir: string): DocumentationTree {
   let tree: DocumentationTree = {
     index: null,
     nodes: []
-    // docs: [],
-    // subcategories: {}
   };
 
   // List everything in the directory.
   const items = fs.readdirSync(dir);
 
   for (const item of items) {
+    if (ignored_items.includes(item)) {
+      continue;
+    }
+
     const itemPath = path.join(dir, item);
 
     const is_dir = is_directory(itemPath);
+    let can_process = is_dir;
+    let is_index_file = false;
+
+    if (!is_dir) {
+      for (const format of supported_formats.keys()) {
+        // Ignore files we cannot process.
+        if (item.endsWith(format)) {
+          can_process = true;
+        }
+
+        if (item == `index.${format}`) {
+          is_index_file = true;
+        }
+      }
+    }
+
+    if (!can_process) {
+      continue;
+    }
+
     const node = is_dir ? process_folder(itemPath) : process_file(itemPath);
 
-    if (!is_dir && item == "index.md") {
+    if (is_index_file) {
       tree.index = node;
     } else {
       tree.nodes.push(node);
     }
-    // if (isDir(itemPath)) {
-    //   // Recursively index it.
-    //   // tree.subcategories[item] = process_folder(itemPath);
-    // } else {
-    //   // Index the file and add it to the tree.
-    //   const doc = process_file(itemPath);
-    //   if (item == "index.md") {
-    //     tree.index = doc;
-    //   } else {
-    //     // tree.docs.push(doc);
-    //   }
-    // }
   }
 
   if (tree.index === null) {
@@ -146,6 +188,5 @@ function process_folder(dir: string): DocumentationTree {
 
 // Returns the document tree.
 export function index_content(): DocumentationTree {
-  not_browser();
-  return process_folder("docs");
+  return process_folder(docs_folder);
 }
