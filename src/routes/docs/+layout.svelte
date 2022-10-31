@@ -10,6 +10,7 @@
   import { quintOut } from 'svelte/easing';
 
   export let data: PageData;
+  console.log(JSON.stringify(data, null, 2));
 </script>
 
 <section id="doc-section-main" in:fly={{ y: 10, easing: quintOut, duration: 700 }}>
