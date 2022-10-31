@@ -4,7 +4,9 @@
   // TODO: move the associated CSS here...
 </script>
 
-
-<div class="doc-section">
-  <a href="/docs/{info.slug}"><h3>{info.title}</h3></a>
-</div>
+<!-- Always part of a list -->
+<li>
+  <div class="doc-section">
+    <a href="/docs/{info.slug}"><h3>{info.title}</h3></a>
+  </div>
+</li>
