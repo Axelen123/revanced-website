@@ -60,16 +60,14 @@ export function wrap(adapter, opts) {
 		return adapter(opts);
 	}
 
-	// Not necessary, but adapter-static does it. Decided not to because it didn't work with my docs page.
-	// opts.pages = `.vercel/output/static/_app/prerendered`;
-	// opts.assets = '.vercel/output/static';
+	// Not exactly what adapter-static does, but it works.
+	opts.pages = '.vercel/output/static';
 
 	adapter = adapter(opts);
 
 	const adapt_fn = adapter.adapt;
 	adapter.adapt = async (builder) => {
 		const result = await adapt_fn(builder);
-		builder.mkdirp(".vercel/output");
 		fs.writeFileSync(
 			'.vercel/output/config.json',
 			JSON.stringify({
