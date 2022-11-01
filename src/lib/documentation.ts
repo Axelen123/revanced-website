@@ -6,6 +6,8 @@ import path from 'path';
 import { is_tree } from './documentation.shared';
 
 import { parse as parse_md } from 'marked';
+import AsciiDocProcessor from 'asciidoctor'
+
 
 /// Types
 
@@ -37,8 +39,39 @@ if (browser) {
 
 /// Constants
 
-const supported_formats: Map<string,  (c: string) => string> = new Map();
-supported_formats.set("md", parse_md);
+const supported_formats: Map<string,  (markup: string) => Document> = new Map();
+
+supported_formats.set("md", markup => {
+  let lines = markup.split('\n');
+
+  // Get and remove the first line.
+  const first_line = lines.splice(0, 1)[0];
+  // Remove `# `.
+  const title = first_line.substring(2);
+
+  // Convert the rest to html
+  const content = parse_md(lines.join('\n'));
+
+  return { title, content };
+});
+
+const asciidoctor = AsciiDocProcessor();
+const adoc_fn = markup => {
+  // Get first line.
+  const first_line = markup.split('\n')[0];
+  // Remove `= `.
+  const title = first_line.substring(2);
+
+  // Convert it to html. Unlike markdown, we do not need to remove the first title heading.
+  // NOTE: Maybe consider change the safe mode value.
+  const content = asciidoctor.convert(markup, { doctype: "book" })
+
+  return { title, content };
+}
+
+supported_formats.set("adoc", adoc_fn)
+supported_formats.set("asciidoc", adoc_fn)
+
 const supported_filetypes = [...supported_formats.keys()];
 
 let docs_folder = process.env.REVANCED_DOCS_FOLDER;
@@ -95,7 +128,7 @@ export function get(slug: string): Document|null {
       continue;
     }
 
-    const desired_path = `${target}.${ext}`; // Don't grab some other supported file instead.
+    const desired_path = `${target}.${ext}`; // Don't grab some other random supported file.
     if (!is_directory(full_path) && desired_path == full_path) {
       // We found it.
       found = true;
@@ -107,16 +140,8 @@ export function get(slug: string): Document|null {
     return null;
   }
 
-  const data = fs.readFileSync(full_path, 'utf-8');
-  let lines = data.split('\n');
-  // Title is the first line. Read and remove it.
-  const title = lines.splice(0, 1)[0];
-  // Process it. We already know it is supported.
-  const content = supported_formats.get(ext)(
-    lines.join('\n')
-  );
-
-  return { title, content };
+  // Process the file and return.
+  return supported_formats.get(ext)(fs.readFileSync(full_path, 'utf-8'));
 }
 
 // Get file information

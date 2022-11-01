@@ -16,7 +16,7 @@
 	<div class="menu">
     <DocsNavTree tree={data.tree} />
 	</div>
-  <div class="content">
+  <div class="markup-content">
     <slot></slot>
   </div>
 </section>

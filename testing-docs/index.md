@@ -1,5 +1,5 @@
-Prerequisites
-###### docs/prerequisites
+# Prerequisites
+##### docs/prerequisites
 
 <br />
 
