@@ -7,6 +7,8 @@ import { is_tree } from './documentation.shared';
 
 import { parse as parse_md } from 'marked';
 
+/// Types
+
 export interface Document {
   title: string;
   // HTML
@@ -18,18 +20,6 @@ export interface DocumentInfo {
   slug: string;
 }
 
-const supported_formats: Map<string,  (c: string) => string> = new Map();
-supported_formats.set("md", parse_md);
-const supported_filetypes = [...supported_formats.keys()];
-
-export type DocsTreeNode = DocumentationTree|DocumentInfo;
-
-let docs_folder = process.env.REVANCED_DOCS_FOLDER;
-if (docs_folder === undefined) {
-  if (prerendering) { console.warn("Using testing docs in production build") }
-  docs_folder = "testing-docs";
-}
-
 // A tree representing the `docs` folder.
 export interface DocsTree {
   // index.whatever
@@ -38,12 +28,36 @@ export interface DocsTree {
   nodes: DocsTreeNode[];
 }
 
+export type DocsTreeNode = DocsTree | DocumentInfo;
+
+// This file does not work in a browser.
 if (browser) {
   throw Error('SvelteKit has skill issues');
 }
 
-function is_directory(item: string): boolean {
+/// Constants
+
+const supported_formats: Map<string,  (c: string) => string> = new Map();
+supported_formats.set("md", parse_md);
+const supported_filetypes = [...supported_formats.keys()];
+
+let docs_folder = process.env.REVANCED_DOCS_FOLDER;
+if (docs_folder === undefined) {
+  if (prerendering) { console.warn("Using testing docs in production build") }
+  docs_folder = "testing-docs";
+}
+
+const ignored_items = ["assets", "README.md"];
+
+/// Utility functions
+
+function is_directory(item: string) {
   return fs.lstatSync(item).isDirectory();
+}
+
+function get_ext(fname: string) {
+  // Get extname and remove the first dot.
+  return path.extname(fname).substring(1);
 }
 
 function get_slug_of_node(node: DocsTreeNode): string {
@@ -54,51 +68,51 @@ function get_slug_of_node(node: DocsTreeNode): string {
   return node.slug;
 }
 
-// Only used by get()
-function find_file_of_supported_format(prefix: string) {
-  const dir = path.dirname(prefix);
-
-  for (const item of fs.readdirSync(dir)) {
-    const full_path = path.join(dir, item);
-    // Get file extension
-    const ext = path.extname(item).substring(1);
-
-    // Ignore if it is not what we are looking for.
-    const desired_path = `${prefix}.${ext}`;
-    if (is_directory(full_path) || ext <= 1 || desired_path != full_path) {
-      continue;
-    }
-
-    // Return if file extension is supported.
-    if (supported_filetypes.includes(ext)) {
-      return {
-        path: full_path,
-        ext,
-      };
-    }
-  }
-
-  return null;
-}
+/// Important functions
 
 // Get a document. Returns null if it does not exist.
 export function get(slug: string): Document|null {
   let target = path.join(docs_folder, slug);
+  // Handle index file for folder.
   if (exists(target) && is_directory(target)) {
     target += "/index";
   }
-  const file_info = find_file_of_supported_format(target);
 
-  if (file_info === null) {
+  const dir = path.dirname(target);
+  if (!exists(dir)) {
     return null;
   }
 
-  const data = fs.readFileSync(file_info.path, 'utf-8');
+  let full_path, ext, found = false;
+  // We are looking for the file `${target}.(any_supported_extension)`. Try to find it.
+  for (const item of fs.readdirSync(dir)) {
+    full_path = path.join(dir, item);
+    // Get file extension
+    ext = get_ext(item);
+
+    // Unsupported/unrelated file.
+    if (!supported_formats.has(ext)) {
+      continue;
+    }
+
+    const desired_path = `${target}.${ext}`; // Don't grab some other supported file instead.
+    if (!is_directory(full_path) && desired_path == full_path) {
+      // We found it.
+      found = true;
+      break;
+    }
+  }
+
+  if (!found) {
+    return null;
+  }
+
+  const data = fs.readFileSync(full_path, 'utf-8');
   let lines = data.split('\n');
   // Title is the first line. Read and remove it.
   const title = lines.splice(0, 1)[0];
-  // Process it. We already know it is supported thanks to `find_file_of_supported_format`.
-  const content = supported_formats.get(file_info.ext)(
+  // Process it. We already know it is supported.
+  const content = supported_formats.get(ext)(
     lines.join('\n')
   );
 
@@ -107,10 +121,9 @@ export function get(slug: string): Document|null {
 
 // Get file information
 function process_file(fname: string): DocumentInfo {
-  const prefix_len = `${docs_folder}/`.length;
   // Remove docs folder prefix and file extension suffix, then split it.
   const parts = fname
-    .substring(`${docs_folder}/`.length, fname.length - path.extname(fname).length)
+    .substring(`${docs_folder}/`.length, fname.length - (get_ext(fname).length + 1))
     .split("/");
 
   // Remove `index` suffix if present.
@@ -125,8 +138,6 @@ function process_file(fname: string): DocumentInfo {
   return { slug, title };
 }
 
-const ignored_items = ["assets", "README.md"];
-
 // Returns a document tree.
 function process_folder(dir: string): DocumentationTree {
   let tree: DocumentationTree = {
@@ -138,32 +149,26 @@ function process_folder(dir: string): DocumentationTree {
   const items = fs.readdirSync(dir);
 
   for (const item of items) {
-    if (ignored_items.includes(item)) {
+    if (ignored_items.includes(item) || [".", "_"].includes(item[0])) {
       continue;
     }
 
     const itemPath = path.join(dir, item);
 
     const is_dir = is_directory(itemPath);
-    let can_process = is_dir;
     let is_index_file = false;
 
     if (!is_dir) {
-      for (const ext of supported_filetypes) {
-        // Ignore files we cannot process.
-        if (path.extname(item).substring(1) != ext) {
-          continue;
-        }
+      // Ignore files we cannot process.
+      if (!supported_formats.has(get_ext(item))) {
+        continue;
+      }
 
-        can_process = true;
+      for (const ext of supported_filetypes) {
         if (item == `index.${ext}`) {
           is_index_file = true;
         }
       }
-    }
-
-    if (!can_process) {
-      continue;
     }
 
     const node = is_dir ? process_folder(itemPath) : process_file(itemPath);
