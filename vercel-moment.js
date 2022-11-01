@@ -69,6 +69,7 @@ export function wrap(adapter, opts) {
 	const adapt_fn = adapter.adapt;
 	adapter.adapt = async (builder) => {
 		const result = await adapt_fn(builder);
+		builder.mkdirp(".vercel/output");
 		fs.writeFileSync(
 			'.vercel/output/config.json',
 			JSON.stringify({
