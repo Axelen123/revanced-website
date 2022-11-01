@@ -60,9 +60,9 @@ export function wrap(adapter, opts) {
 		return adapter(opts);
 	}
 
-	// Not exactly necessary, but adapter-static does it.
-	opts.pages = `.vercel/output/static/_app/prerendered`;
-	opts.assets = '.vercel/output/static';
+	// Not necessary, but adapter-static does it. Decided not to because it didn't work with my docs page.
+	// opts.pages = `.vercel/output/static/_app/prerendered`;
+	// opts.assets = '.vercel/output/static';
 
 	adapter = adapter(opts);
 
