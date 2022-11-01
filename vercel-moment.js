@@ -52,11 +52,17 @@ function vercel_routes(builder) {
 	return routes;
 }
 
-export function wrap(adapter) {
+export function wrap(adapter, opts) {
 	if (!process.env.VERCEL) {
 		// we don't have to bother :)
-		return adapter;
+		return adapter(opts);
 	}
+
+	// Not exactly necessary, but adapter-static does it.
+	opts.pages = `.vercel/output/static/${builder.config.kit.appDir}/prerendered`;
+	opts.assets = '.vercel/output/static';
+
+	adapter = adapter(opts);
 
 	const adapt_fn = adapter.adapt;
 	adapter.adapt = async (builder) => {
