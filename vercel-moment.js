@@ -1,6 +1,6 @@
 import fs from 'fs';
 
-// This code was stolen from here: https://github.com/sveltejs/kit/blob/master/packages/adapter-static/platforms.js
+// This code was stolen from https://github.com/sveltejs/kit/blob/master/packages/adapter-static/platforms.js
 
 // sveltekit does things like this instead of actually just using ts for some reason.
 /** @param {import('@sveltejs/kit').Builder} builder */
