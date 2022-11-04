@@ -143,7 +143,7 @@ function process_file(fname: string): DocumentInfo {
 
 // Returns a document tree.
 function process_folder(dir: string): DocsTree {
-  let tree: DocumentationTree = {
+  let tree: DocsTree = {
     index: null,
     nodes: []
   };
