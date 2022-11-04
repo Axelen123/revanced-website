@@ -1,7 +1,6 @@
 <script lang="ts">
-  // CSS is from the docs layout. TODO: move it here...
-  import type { DocsTree } from '$lib/documentation';
   import { is_tree } from '$lib/documentation.shared';
+  import type { DocsTree } from '$lib/documentation.shared';
 
   import DocsNavNode from '$lib/components/atoms/DocsNavNode.svelte';
 

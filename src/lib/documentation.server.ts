@@ -1,36 +1,14 @@
+import { is_tree } from './documentation.shared';
+import type { Document, DocsTree, DocsTreeNode, DocumentInfo } from './documentation.shared';
+
 import { browser, prerendering } from '$app/environment';
 
 import fs, { existsSync as exists } from 'fs';
 import path from 'path';
 
-import { is_tree } from './documentation.shared';
 
 import { parse as parse_md } from 'marked';
 import AsciiDocProcessor from 'asciidoctor'
-
-
-/// Types
-
-export interface Document {
-  title: string;
-  // HTML
-  content: string;
-}
-
-export interface DocumentInfo {
-  title: string;
-  slug: string;
-}
-
-// A tree representing the `docs` folder.
-export interface DocsTree {
-  // index.whatever
-  index: DocumentInfo;
-  // Everything except index.whatever
-  nodes: DocsTreeNode[];
-}
-
-export type DocsTreeNode = DocsTree | DocumentInfo;
 
 // This file does not work in a browser.
 if (browser) {
@@ -164,7 +142,7 @@ function process_file(fname: string): DocumentInfo {
 }
 
 // Returns a document tree.
-function process_folder(dir: string): DocumentationTree {
+function process_folder(dir: string): DocsTree {
   let tree: DocumentationTree = {
     index: null,
     nodes: []
@@ -219,6 +197,6 @@ function process_folder(dir: string): DocumentationTree {
 }
 
 // Returns the document tree.
-export function index_content(): DocumentationTree {
+export function index_content(): DocsTree {
   return process_folder(docs_folder);
 }

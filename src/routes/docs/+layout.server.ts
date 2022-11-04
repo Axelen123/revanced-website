@@ -1,7 +1,6 @@
 import type { PageServerLoad } from './$types';
 
-// documentation.ts should probably be renamed...
-import { index_content } from '$lib/documentation';
+import { index_content } from '$lib/documentation.server';
 
 // TODO: add note here about api impl and prerendering...
 export const prerender = true;

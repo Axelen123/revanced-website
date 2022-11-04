@@ -1,6 +1,9 @@
 <script lang="ts">
   import type { PageData } from './$types';
 
+  import '$lib/documentation.scss';
+
+
   // Data here comes from a trusted source.
   // CSS comes from the layout.
   export let data: PageData;

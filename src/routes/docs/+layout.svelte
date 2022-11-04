@@ -1,7 +1,4 @@
 <script lang="ts">
-  // TODO: move everything except content highlighting here...
-  import '$lib/documentation.scss';
-
   import type { PageData } from './$types';
 
   import DocsNavTree from '$lib/components/molecules/DocsNavTree.svelte';
