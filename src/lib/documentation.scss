@@ -1,78 +1,45 @@
-#doc-section-main {
-		display: grid;
-    grid-template-columns: 300px 3fr;
-
+#markup-content {
     /* Defaults for text */
     color: var(--white);
     font-weight: 300;
     font-size: 1rem;
     letter-spacing: 0.02rem;
+    padding: 100px 30px 0px 30px;
 
-	  .menu,
-	  .markup-content {
-		    height: 100vh;
-		    width: 100%;
-	  }
+    a {
+        text-decoration: none;
+        color: var(--white);
+        border-bottom: 1.5px solid var(--accent-color);
+        padding: 0px 5px;
+        transition: all 0.4s var(--bezier-one);
+    }
 
-	  .menu {
-		    padding: 90px 15px 0px 15px;
-		    display: flex;
-		    flex-direction: column;
-		    gap: 1rem;
+    a:hover {
+        background-color: var(--accent-color);
+        border-radius: 6px;
+        color: var(--grey-four);
+    }
 
-        a {
-            text-decoration: none;
-        }
-	  }
+    code {
+        background-color: var(--grey-six);
+        border-radius: 4px;
+        padding: 2px;
+    }
 
-	  .markup-content {
-		    padding: 100px 30px 0px 30px;
-	      a {
-		        text-decoration: none;
-		        color: var(--white);
-		        border-bottom: 1.5px solid var(--accent-color);
-		        padding: 0px 5px;
-		        transition: all 0.4s var(--bezier-one);
-	      }
+    h4 {
+        margin-bottom: 0.5rem;
+    }
 
-	      a:hover {
-		        background-color: var(--accent-color);
-		        border-radius: 6px;
-		        color: var(--grey-four);
-	      }
+    h5 {
+        color: var(--accent-color);
+    }
 
-        code {
-            background-color: var(--grey-six);
-            border-radius: 4px;
-            padding: 2px;
-        }
-	  }
+    /* Markup processors output this for bold text, but css spec is goofy aah */
+    strong {
+        font-weight: bold;
+    }
 
-	  .doc-section {
-		    background-color: var(--grey-one);
-		    border-radius: 12px;
-		    padding: 15px 20px;
-	  }
-
-	  .doc-section-selected {
-		    background-color: var(--grey-three);
-		    border-radius: 12px;
-		    padding: 15px 20px;
-	  }
-
-	  .doc-section-selected > h3 {
-		    color: var(--white);
-	  }
-
-	  .button-wrapper {
-		    width: 30rem;
-	  }
-
-	  ul {
-		    padding-left: 2rem;
-	  }
-
-	  h4 {
-		    margin-bottom: 0.5rem;
-	  }
+    ul {
+        padding-left: 2rem;
+    }
 }

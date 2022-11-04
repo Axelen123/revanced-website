@@ -12,4 +12,8 @@
 	<meta content="ReVanced | Docs" name="twitter:title" />
 </svelte:head>
 
-{@html data.content}
+<div id="markup-content">
+  <h1 class="title">{data.title}</h1>
+
+  {@html data.content}
+</div>

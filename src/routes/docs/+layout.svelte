@@ -16,7 +16,22 @@
 	<div class="menu">
     <DocsNavTree tree={data.tree} />
 	</div>
-  <div class="markup-content">
-    <slot></slot>
-  </div>
+  <slot></slot>
 </section>
+
+<style lang="scss">
+.menu {
+	padding: 90px 15px 0px 15px;
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+}
+
+#doc-section-main {
+	display: grid;
+  grid-template-columns: 300px 3fr;
+
+	height: 100vh;
+	width: 100%;
+}
+</style>

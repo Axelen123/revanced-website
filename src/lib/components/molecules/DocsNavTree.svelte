@@ -30,3 +30,11 @@
     {/if}
   {/each}
 </ul>
+
+<style>
+ul {
+	padding-left: 2rem;
+  list-style-type: "• ";
+  color: var(--white);
+}
+</style>
