@@ -5,11 +5,11 @@
 <section class="hero">
 	<div class="hero-text">
 		<h1>
-			<span>Re</span>Vanced
+			<span>Shuuu</span> mimimi
 		</h1>
 
 		<h4>
-			ReVanced is an extensible framework for building <br /> Android applications.
+			affan will explod
 		</h4>
 
 		<div class="hero-buttons">
